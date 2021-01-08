@@ -16,7 +16,20 @@
 - 非受控组件
     通过Ref直接获取原生的控件
     
+### JSX
+
+JSX是快速生成react元素的一种语法，实际是React.createElement(component, props, ...children)的语法糖，同时JSX也是Js的语法扩展，包含所有Js功能。
+
+> const element1 = (  
+>
+> ​	<h1 className="greeting">    Hello, world!  {this.props.user.name}  </h1> ); 
+>
+> // 等价 
+>
+> const element2 = React.createElement(  'h1',  {className: 'greeting'},  'Hello, world!'  ...);
+
 ### 容器组件与展示组件
+
 - 容器组件
     容器组件需要知道如何获取子组件所需的数据以及这些数据的处理逻辑，并把数据和逻辑沟通过props提供给子组件使用。容器组件一般是有状态组件。
 - 展示组件
@@ -128,8 +141,27 @@ function Users(props) {
     
 - 其他
 
-### 调试
+### 安装调试
+
+- 使用淘宝镜像
+    
+    - npm install -g cnpm --registry=https://registry.npm.taobao.org
+    
+        cnpm -v; 
+    
+        cnpm config set registry https://registry.npm.taobao.org
+    
+- create-react-app安装
+
+    - cnpm install -g create-react-app
+    - create-react-app my-app
+        - npm start //Starts the development server
+        - npm run build //Bundles the app into static files for production
+        - npm test //Starts the test server
+        - npm run reject //Remove this tool and copies build dependencie
+
 - react devtools chrome插件安装
+    
     - 将下载的zip文件拖到chrome://extensions/
     - 
 
