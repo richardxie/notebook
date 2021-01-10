@@ -84,7 +84,7 @@ function Users(props) {
         - 不能通过直接修改state的值改变状态，必须通过setState改变并且setState是异步操作
         - 并发情况下，增量修改状态
         
-           ```
+           ```javascript
            this.setState((perState, props)=> {
                 counter: preState.counter + 1;
            })
@@ -103,7 +103,7 @@ function Users(props) {
     <button onClick= {function(){console.log("clicked:" + this)}}>
     this指向运行时调用函数的对象
 - 使用组件
-    ```
+    ```typescript
     class Component1 extends React.Componet {
         constructor(props) {
             super(props)
@@ -121,7 +121,7 @@ function Users(props) {
     ```
     
     - 使用属性
-    ```
+    ```javascript
      class Component1 extends React.Componet {
         constructor(props) {
             super(props)
@@ -144,7 +144,7 @@ function Users(props) {
 ### 安装调试
 
 - 使用淘宝镜像
-    
+  
     - npm install -g cnpm --registry=https://registry.npm.taobao.org
     
         cnpm -v; 
@@ -160,12 +160,25 @@ function Users(props) {
         - npm test //Starts the test server
         - npm run reject //Remove this tool and copies build dependencie
 
-- react devtools chrome插件安装
+- react/redux devtools 
+  
+    - chrome插件安装 将下载的zip文件拖到chrome://extensions/
     
-    - 将下载的zip文件拖到chrome://extensions/
-    - 
-
-
+    - firefox安装 addons
+    
+    - yarn add redux-devtools-extension --dev
+    
+        ```javascript
+        import { composeWithDevTools } from 'redux-devtools-extension';
+        const composeEnhancers = composeWithDevTools({
+         // Specify name here, actionsBlacklist, actionsCreators and other options if needed
+        });
+        const store = createStore(
+         tasks,
+         composeEnhancers(applyMiddleware(thunk))
+        );
+        ```
+    
 
 ## Redux
 
@@ -180,6 +193,7 @@ redux 是 js 应用的可预测状态的容器。 可以理解为全局数据状
 
 - action
     -  动作数据，是一个简单对象用于描述state发生了什么。
+    -  同步action
     ```javascript
     const INCREMENT = 'INCREMENT'
     const incrementAction = {"type": INCREMENT, "count": 2}
@@ -190,9 +204,27 @@ redux 是 js 应用的可预测状态的容器。 可以理解为全局数据状
     }
     
     ```
+```
+    
+    - 异步action（redux-thunk）
+    
+        用于支持dispatch函数
+    
+        ```js
+        const asyncAction = dispatch => {
+            api.createTask({title, description, status})
+            	.then(resp => {dispatch(createTaskSucceeded(resp.data))})
+        	};
+        
+        
+        }
+```
 
+
+​    
 -  reducer
-    -  动作， 根据action对state进行炒作
+   
+    -  动作， 根据action对state进行操作
     
     ``` javascript
     
@@ -205,29 +237,44 @@ redux 是 js 应用的可预测状态的容器。 可以理解为全局数据状
             return {num: state.num - action.count}
         default:
             return state
-    }}
-
+}}
+    
     export {calculate}
     ```
     
 - store
     store就是整个项目保存数据的地方，并且只能有一个。创建store就是把所有reducer给它.
-    ```
+    ```javascript
     
     import { createStore, combineReducers } from "redux";
     import { calculate } from "./calculate";
 
     const rootReducers = combineReducers({calculate})
     export const store = createStore(rootReducers)
-    ```
+    
+      
+   store.getState(); //读取store的当前状态
+   store.dispatch({type: 'FETCH_TASK', payload:{}}) //向Reducer发送Action来更新Store
+   store.,subscribe(() => { console.log('current state:', store.getState())}) //store监听器，当store改变时动作
+   ```
    
 - dispatch
 store.dispatch()是组件发出action的唯一方法。
-    ```
+  
+    ```javascript
     store.dispatch(incrementAction);
     ```
+  
+- middleware
+
+  位于action（正在派发）和store（用于将action传递到reducer并广播更新状态）之间的代码。
+  
+    
+
+![](img\redux.jpg)
 
 ### 原则
+
 - 唯一数据源
     Redux 只用唯一一个 store 储存应用所有的 state，被称为 single source of truth（唯一数据源）。store 中的数据结构往往是个给应用使用的深度嵌套的对象
 - State 是只读的
@@ -235,9 +282,80 @@ store.dispatch()是组件发出action的唯一方法。
 - 使用纯函数来执行修改
     Reducer 只是一些纯函数，它接收先前的 state 和 action，并返回新的 state
 
+### 副作用
 
+指与Redux应用之外的世界进行的所有交互，包括服务器或本地缓存交互。
+
+- action的创建器可以处理副作用
+
+  ```javascript
+  export function createTask({title, description, status = 'Unstarted'}) {
+  	return dispatch => {
+  		api.createTask({title, description, status}) //服务器交互
+  			.then(resp => {dispatch(createTaskSucceeded(resp.data))}) //异步action更新store
+  	};	
+  }
+  ```
+
+  
+
+- middleware可以处理副作用
+
+  ```javascript
+  export function fetchTasks() {
+      return {
+          [CALL_API]: { //API中间件处理API调用的流程与副作用
+              types: [FETCH_TASKS_STARTED, FETCH_TASKS_SUCCEEDED, FETCH_TASKS_FAILED],
+              endpoint: '/tasks'
+          }
+   	}
+  }
+  ```
+
+  - redux-saga
+
+    > `redux-saga` 是一个用于管理应用程序 Side Effect（副作用，例如异步获取数据，访问浏览器缓存等）的 library，它的目标是让副作用管理更容易，执行更高效，测试更简单，在处理故障时更容易。
+    >
+    > 可以想像为，一个 saga 就像是应用程序中一个单独的线程，它独自负责处理副作用。 `redux-saga` 是一个 redux 中间件，意味着这个线程可以通过正常的 redux action 从主应用程序启动，暂停和取消，它能访问完整的 redux state，也可以 dispatch redux action。
+
+    ```javascript
+    import { call, put, takeEvery, takeLatest } from 'redux-saga/effects'
+    import Api from '...'
+    
+    // worker Saga : 将在 USER_FETCH_REQUESTED action 被 dispatch 时调用
+    function* fetchUser(action) {
+       try {
+          const user = yield call(Api.fetchUser, action.payload.userId);
+          yield put({type: "USER_FETCH_SUCCEEDED", user: user});
+       } catch (e) {
+          yield put({type: "USER_FETCH_FAILED", message: e.message});
+       }
+    }
+    
+    /*
+      在每个 `USER_FETCH_REQUESTED` action 被 dispatch 时调用 fetchUser
+      允许并发（译注：即同时处理多个相同的 action）
+    */
+    function* mySaga() {
+      yield takeEvery("USER_FETCH_REQUESTED", fetchUser);
+    }
+    
+    /*
+      也可以使用 takeLatest
+    
+      不允许并发，dispatch 一个 `USER_FETCH_REQUESTED` action 时，
+      如果在这之前已经有一个 `USER_FETCH_REQUESTED` action 在处理中，
+      那么处理中的 action 会被取消，只会执行当前的
+    */
+    function* mySaga() {
+      yield takeLatest("USER_FETCH_REQUESTED", fetchUser);
+    }
+    
+    export default mySaga;
+    ```
 
 ### 样例
+
 - 复合Reducer
     ```javascript
 
@@ -262,41 +380,59 @@ store.dispatch()是组件发出action的唯一方法。
     const store = createStore(reducers);
     ```
     
-    ### React-Redux
-    连接React Component 与 Redux State
     
-    ```
-    import React from 'react';
-    import { connect } from 'react-redux';
-    import store from '../path/to/store';
-    import axios from 'axios';
-    import UserList from '../views/list-user';
 
-    const UserListContainer = React.createClass({
-      componentDidMount: function() {
-        axios.get('/path/to/user-api').then(response => {
-          store.dispatch({
-            type: 'USER_LIST_SUCCESS',
-            users: response.data
-          });
-        });
-      },
+## React-Redux
 
-      render: function() {
-        return <UserList users={this.props.users} />;
-      }
+![react-redux](img\react-redux.jpg)
+
+连接React Component 与 Redux State
+
+```
+import React from 'react';
+import { connect } from 'react-redux';
+import store from '../path/to/store';
+import axios from 'axios';
+import UserList from '../views/list-user';
+
+const UserListContainer = React.createClass({
+  componentDidMount: function() {
+    axios.get('/path/to/user-api').then(response => {
+      store.dispatch({
+    type: 'USER_LIST_SUCCESS',
+        users: response.data
+      });
     });
+  },
 
-    const mapStateToProps = function(store) {
-      return {
-        users: store.userState.users
-      };
-    }
+  render: function() {
+    return <UserList users={this.props.users} />;
+  }
+});
 
-    export default connect(mapStateToProps)(UserListContainer);
-    ```
+const mapStateToProps = function(store) {
+  return {
+    users: store.userState.users
+  };
+}
+
+export default connect(mapStateToProps)(UserListContainer);
+```
+
+mapStateToProps函数的目的是使得连接的组件能轻松接收并渲染传递给它的数据，通常不是在组件中从redux store操作或取得数据。
+
+- 选择器
+
+  纯函数，接收store中的状态并计算数据，这些数据作为属性传递个React。
+
+  选择器的主要作用是保持store中的状态数据最小，通过选择器来计算派生数据，例如过滤后的任务列表
+
+  - reselect库 
+
+    支持记忆和组合
 
 ## DvaJS
+
 通过 reducers, effects 和 subscriptions 组织 model，简化 redux 和 redux-saga 引入的概念
 -  react 表示法
    如果多个 Component 之间要发生交互, 那么状态(即: 数据)就维护在这些 Component 的最小公约父节点上, 子组件本身不维持任何 state, 完全由父组件传入 props 以决定其展现, 是一个纯函数的存在形式, 即: Pure Component
@@ -331,3 +467,8 @@ Dva 是基于 React + Redux + Saga 的最佳实践沉淀
     网络请求
 -  
 ```
+
+
+
+
+

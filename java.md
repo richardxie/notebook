@@ -12,7 +12,62 @@
   >
   > 在 Java 语言中，任何类、 接口、 初始化方法或成员的泛型签名如果包含了类型变量（ Type Variables） 或参数化类型（ Parameterized Types），则 Signature 属性会为它记录泛型签名信息。
 
-- 获取类型信息
+- 获取类型信息 反射
+
+### 泛型不变、协变和逆变
+
+- 概念
+
+  逆变与协变用来描述类型转换（type transformation）后的继承关系，其定义：如果𝐴、𝐵表示类型，𝑓(⋅)表示类型转换，≤表示继承关系（比如，𝐴≤𝐵表示𝐴是由𝐵派生出来的子类）；
+
+  - 𝑓(⋅)是逆变（contravariant）的，当𝐴≤𝐵时有𝑓(𝐵)≤𝑓(𝐴)成立；
+  - 𝑓(⋅)是协变（covariant）的，当𝐴≤𝐵时有𝑓(𝐴)≤𝑓(𝐵)成立；
+  - 𝑓(⋅)是不变（invariant）的，当𝐴≤𝐵时上述两个式子均不成立，即𝑓(𝐴)与𝑓(𝐵)相互之间没有继承关系。
+
+- 示例
+
+  - ArrayList<Number>这种形式的泛型是不变的，就是说ArrayList<Number> list，不能被赋值为ArrayList<Integer>，也不能被赋值为ArrayList<Object>，只能被赋值为ArrayList<Number>
+  - ArrayList<? extends Number>这种形式的泛型是支持协变的，它可以被赋值为ArrayList<Number>、ArrayList<Integer>，但是不能被赋值为ArrayList<Object>
+  - ArrayList<? super Number>这种形式的泛型是支持逆变的，它可以被赋值为ArrayList<Number>、ArrayList<Object>，但是不能被赋值为ArrayList<Integer>
+
+- 最佳实践
+
+  Producer-Extends, Consumer-Super
+
+  PECS总结：
+
+  - 要从泛型类取数据时，用extends；
+  - 要往泛型类写数据时，用super；
+  - 既要取又要写，就不用通配符（即extends与super都不用）。
+
+```java
+	/**
+       * 协变， 不能写入除null的值
+       * 可赋值Number及其父类的列表， 获取的对象类型为Number
+       */
+      List<? extends Number> numbers; 
+      List<Integer> integers = new ArrayList<>(2);
+      numbers = integers;
+      integers.add(Integer.valueOf(0));
+      integers.add(Integer.valueOf(1));
+      numbers.add(null);
+      //numbers.add(1); 报错
+      Number n = numbers.get(0);
+      Integer i = (Integer) numbers.get(0); //需要转型
+
+  	/**
+       * 逆变， 写入Nmber及其子类
+       * 可赋值Number及其父类的列表， 获取的对象类型为Object
+       */
+      List<? super Number> numbers2 ;
+      List<Number> ns = new ArrayList<>();
+      numbers2 = ns;
+      numbers2.add(Integer.valueOf(99));
+      numbers2.add(Long.valueOf(100000L));
+      Number num = (Number) numbers2.get(0);
+```
+
+
 
 ### 泛型类型
 
@@ -138,6 +193,4 @@ public void testGenericType() throws NoSuchFieldException, SecurityException {
   
   
   ```
-
-  
 
