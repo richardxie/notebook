@@ -59,6 +59,8 @@ Netty组从模式
 2. 处理 I/O 事件，即 Read、Write 事件，在 NioSocketChannel 可读、可写事件发生时进行处理
 3. 处理任务队列中的任务，runAllTasks
 
+
+
 ### 样例
 
 ```
@@ -97,3 +99,38 @@ publicstaticvoidmain(String[] args) {
         });
 }
 ```
+
+## TCP
+
+### 拆包与粘包
+
+> 1. 要发送的数据大于TCP缓冲区剩余的大小，发生拆包
+> 2. 要发送的数据大于MSS(最大报文长度)，发生拆包
+> 3. 要发送的数据小于TCP缓冲区的大小，TCP将多次写入缓冲区的数据一次发送出去，发生粘包
+> 4. 接收数据端的应用层没有及时读取接收缓冲区中的数据，将发生粘包
+
+### 解决方案
+
+#### 固定长度的拆包器 
+
+> FixedLengthFrameDecoder
+
+该解码器会每次读取固定长度的消息，如果当前读取到的消息不足指定长度，那么就会等待下一个消息到达后进行补足。
+
+编码器实现要保证每次的数据的长度， 不足部分要补足。
+
+
+
+#### 行拆包器 
+
+LineBasedFrameDecoder
+
+#### 分隔符拆包器 
+
+DelimiterBasedFrameDecoder
+
+#### 基于数据包长度的拆包器
+
+LengthFieldBasedFrameDecoder与LengthFieldPrepender
+
+https://blog.csdn.net/agzhchren/article/details/91359168
