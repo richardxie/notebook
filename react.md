@@ -141,6 +141,16 @@ function Users(props) {
     
 - 其他
 
+### 优化
+
+- shouldComponentUpdate
+
+  
+
+- PureComponent
+
+- 分页及其他策略
+
 ### 安装调试
 
 - 使用淘宝镜像
@@ -354,6 +364,14 @@ store.dispatch()是组件发出action的唯一方法。
     export default mySaga;
     ```
 
+### 优化
+
+- 避免开销大的重绘，就连接组件。默认情况下，更新组件将会重新渲染子组件，除非子组件使用自定义哦shouldComponentUpate方法或PureComponent防止重绘。
+- 至上而下的方法，使用简单策略连接单个组件App，该组件可以传递字组件所需的任何数据。同时带来了性能成本。
+- connect将其他组件连接到redux，connect和mapStateToProps会对新旧属性进行浅层对比，没有变化则绕过渲染。组件通过选择器来获取它们自己所需的数据-不多也不少。
+
+
+
 ### 样例
 
 - 复合Reducer
@@ -430,6 +448,8 @@ mapStateToProps函数的目的是使得连接的组件能轻松接收并渲染�
   - reselect库 
 
     支持记忆和组合
+
+
 
 ## DvaJS
 

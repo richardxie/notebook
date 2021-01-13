@@ -129,6 +129,12 @@ LineBasedFrameDecoder
 
 DelimiterBasedFrameDecoder
 
+对象拆包器
+
+public class ObjectDecoder extends LengthFieldBasedFrameDecoder
+
+public class ObjectEncoder extends MessageToByteEncoder<Serializable> 
+
 #### 基于数据包长度的拆包器
 
 LengthFieldBasedFrameDecoder与LengthFieldPrepender

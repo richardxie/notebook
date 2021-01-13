@@ -129,6 +129,72 @@ git merge --abort
     *  git checkout commitid -b branchname :基于commitid建立分支
     * git push origin HEAD:remoteName
     
+* git merge 与git rebase的区别
+
+    - git merge 操作合并分支会让两个分支的每一次提交都按照提交时间（并不是push时间）排序，并且会将两个分支的最新一次commit点进行合并成一个新的commit，最终的分支树呈现非整条线性直线的形式
+- git rebase操作实际上是将当前执行rebase分支的所有基于原分支提交点之后的commit打散成一个一个的patch，并重新生成一个新的commit hash值，再次基于原分支目前最新的commit点上进行提交，并不根据两个分支上实际的每次提交的时间点排序，rebase完成后，切到基分支进行合并另一个分支时也不会生成一个新的commit点，可以保持整个分支树的完美线性
+    - git rebase开发流程
+  - git clone master branch
+      - 在自己本地checkout -b local创建一个本地开发分支
+      - 在本地的开发分支上开发和测试
+      - 阶段性开发完成后（包含功能代码和单元测试），可以准备提交代码
+        - 首先切换到master分支，git pull拉取最新的分支状态
+        - 然后切回local分支
+        - 通过git rebase -i 将本地的多次提交合并为一个，以简化提交历史。**本地有多个提交时,如果不进行这一步,在git rebase master时会多次解决冲突(最坏情况下,每一个提交都会相应解决一个冲突)**
+        - git rebase master 将master最新的分支同步到本地，这个过程可能需要手动解决冲突(**如果进行了上一步的话,只用解决一次冲突**)
+        - 然后切换到master分支，git merge将本地的local分支内容合并到master分支
+        - git push将master分支的提交上传
+      - 本地开发分支可以灵活管理
+    
+    
+```mermaid
+graph LR
+C1 --> C2
+C2 --> C6
+main --> C6
+C2 -->|dev| C3
+C3 --> C4
+C4 --> C5
+head --> C5
+style main fill:#f9f,stroke:#333,stroke-width:4px,fill-opacity:0.5
+style head fill:#f9f,stroke:#333,stroke-width:4px,fill-opacity:0.5
+
+
+```
+
+​    	git checkout main; git merge dev
+
+```mermaid
+graph LR
+C1 --> C2
+C2 --> C6
+main --> C7
+C2 -->|dev| C3
+C3 --> C4
+C4 --> C5
+C5 --> C6
+C6 --> C7
+head --> C7
+dev --> C5
+style main fill:#f9f,stroke:#333,stroke-width:4px,fill-opacity:0.5
+style head fill:#f9f,stroke:#333,stroke-width:4px,fill-opacity:0.5
+```
+
+git checkout dev; git rebase main;  git checkout main; git merge dev
+```mermaid
+graph LR
+C1 --> C2
+main --> C6
+C2 -->|dev| C3
+C3 --> C4
+C4 --> C5
+C5 --> C6
+head --> C6
+dev --> C5
+style main fill:#f9f,stroke:#333,stroke-width:4px,fill-opacity:0.5
+style head fill:#f9f,stroke:#333,stroke-width:4px,fill-opacity:0.5
+```
+
 ### ~和^
 git log --oneline –graph
 ~表示纵深位置，^表示横向位置
