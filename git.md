@@ -145,7 +145,7 @@ git merge --abort
         - 然后切换到master分支，git merge将本地的local分支内容合并到master分支
         - git push将master分支的提交上传
       - 本地开发分支可以灵活管理
-    
+  
     
 ```mermaid
 graph LR
@@ -180,7 +180,7 @@ style main fill:#f9f,stroke:#333,stroke-width:4px,fill-opacity:0.5
 style head fill:#f9f,stroke:#333,stroke-width:4px,fill-opacity:0.5
 ```
 
-git checkout dev; git rebase main;  git checkout main; git merge dev
+git pull(main); git checkout dev; git rebase main;  git checkout main; git merge dev
 ```mermaid
 graph LR
 C1 --> C2

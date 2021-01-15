@@ -27,6 +27,8 @@
 
 ### BeanFactory
 
+#### 加载Bean
+
 ```java
 @Override
 public Object getBean(String name) throws BeansException {
@@ -58,10 +60,23 @@ public Object getBean(String name) throws BeansException {
 
 5. 检测parentBeanFactory
 
+   递归父类工厂加载Bean
+
 6. 将存储XML配置文件的GernericBeanDefinition转换为RootBeanDefinition
+
+   RootBeanDefiniton
 
 7. 寻找依赖
 
+   Bean如果有dependOn，先要加载依赖的Bean
+
 8. 针对不同的scope进行Bean的创建
 
+   singleton, prototype, request等不同的scope，进行Bean初始换
+
 9. 类型转换
+
+   根据接口的requiredType进行类型转换
+
+
+
