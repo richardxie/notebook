@@ -80,3 +80,28 @@ public Object getBean(String name) throws BeansException {
 
 
 
+优雅下线
+
+- 首先关闭 socket 监听，等待正在处理的所有请求完成：具体可见 WebServerGracefulShutdownLifecycle，通过 getPhase 返回最大值，达到早于 WEB 容器关闭执行的目的；
+- 然后触发 WEB 容器关闭：具体可见 WebServerStartStopLifecycle。
+
+```yml
+# 开启优雅关闭 
+server: 
+  shutdown: graceful 
+# 关闭的缓冲时间
+spring: 
+  lifecycle: 
+    timeout-per-shutdown-phase: 10s
+    
+# http://service/actuator/shutdown 
+management:
+  endpoint:
+    shutdown:
+      enabled: shutdown
+
+```
+
+k8s
+
+https://help.aliyun.com/document_detail/132165.html

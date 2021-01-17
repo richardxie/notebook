@@ -1,6 +1,35 @@
 # Java
 
-## Java泛型
+## Java特性历史
+
+- JDK5  泛型、枚举、自动装箱/拆箱、可变参数、注解、foreach循环、静态导入、新的线程模型（Concurrent）
+- JDK7 异常处理（捕获多异常)、自动资源释放(trywithResource)）、泛型类型推断、swtich、forkjoin、G1
+- JDK8 lamda、stream、dateTime、
+- JDK9 模块化
+
+  
+
+## 异常
+
+异常类型
+
+- 检查性异常（Checked Exception）
+
+  非继承RuntimeException
+
+  检查异常必须捕获或者声明再抛出
+
+- 非检查性异常 （Unchecked Exception）
+
+  继承RuntimeException
+
+## 并发
+
+线程池
+
+
+
+## 泛型
 
 ### 类型擦除
 
@@ -193,4 +222,39 @@ public void testGenericType() throws NoSuchFieldException, SecurityException {
   
   
   ```
+
+##  Lamda
+
+### 函数式编程
+
+函数称为第一类的类型， 可以作为函数的参数，赋值给变量及返回值。
+
+```java
+@Test
+public void testLamda() {
+	final Collection< Task > tasks = Lists.newArrayList(
+				    new Task( Status.OPEN, 5 ),
+				    new Task( Status.OPEN, 13 ),
+				    new Task( Status.CLOSED, 8 )
+
+		);
+		
+	Integer openSum = tasks.stream()
+			.filter(Task::opening)
+			.mapToInt(Task::getPoints)
+			.sum();
+		
+	System.out.println("sum:" + openSum);
+
+	Map<Status, Integer> groupSum = tasks.stream()
+				.collect(Collectors.groupingBy(Task::getStatus, Collectors.summingInt(Task::getPoints)));
+		
+	System.out.println("groupSum:" + groupSum);
+		
+	Map<Status, List<Task>> partition = tasks.stream()
+				.collect( Collectors.groupingBy(Task::getStatus, Collectors.toList()));
+	System.out.println("partition:" + partition);
+
+	}
+```
 
