@@ -160,6 +160,8 @@ function Users(props) {
         cnpm -v; 
     
         cnpm config set registry https://registry.npm.taobao.org
+        
+        yarn config set registry [http://registry.npm.taobao.org](http://registry.npm.taobao.org/)
     
 - create-react-app安装
 
@@ -169,6 +171,12 @@ function Users(props) {
         - npm run build //Bundles the app into static files for production
         - npm test //Starts the test server
         - npm run reject //Remove this tool and copies build dependencie
+
+- json-server
+
+    - yarn global add json-server 
+    - json-server --watch db.json --port 3001
+    - http://lcoalhost:3001/projects?_embed=tasks
 
 - react/redux devtools 
   
@@ -448,6 +456,46 @@ mapStateToProps函数的目的是使得连接的组件能轻松接收并渲染�
   - reselect库 
 
     支持记忆和组合
+
+## 数据
+
+数据种类
+
+1. **Domain data** 领域对象
+
+   通常，前端对Domain data最大的管理需求是和服务端保持同步，不会有频繁和复杂的变更——如果有的话请考虑合并批处理和转移复杂度到服务端。
+
+2. **UI State**
+
+   决定当前UI如何展示的状态，比如一个弹窗的开闭，下拉菜单是否打开
+
+3. **App State**
+
+   应用级状态数据，例如当前是否有请求正在加载
+
+   
+
+   > Because the store represents the core of your application, you should **define your state shape in terms of your domain data and app state, not your UI component tree.**
+
+关系数据构造策略： 嵌套数据 vs 规范化数据
+
+### 规范化数据
+
+将嵌套数据结构扁平化，每个领域都接收自己的顶级状态属性。
+例如: 项目及任务的数据关系中， 任务可以和项目独立管理，而不是作为项目的字属性来管理，用对象ID来表达关系。
+
+规范化数据的优点：
+- 减少复制
+- 简化更新逻辑
+- 性能更高
+
+normalizr使用
+
+- 定义模式
+- normalize函数规范化
+- 
+
+## 测试
 
 
 
