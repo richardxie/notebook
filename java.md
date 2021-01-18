@@ -9,6 +9,49 @@
 
   
 
+## 类加载器
+
+负责加载类，通常将二进制文件中的字节流转换为Class。
+
+加载class的通用流程：
+
+> 1. 调用`findLoadedClass(String)`方法检查这个类是否被加载过
+>
+> 2. 使用**父加载器**调用`loadClass(String)`方法，如果父加载器为`Null`，类加载器装载虚拟机内置的加载器
+>
+> 3. 调用`findClass(String)`方法装载类
+>
+>    如果，按照以上的步骤成功的找到对应的类，并且该方法接收的`resolve`参数的值为`true`,那么就调用`resolveClass(Class)`方法来处理类。
+>    `ClassLoader`的子类最好覆盖`findClass(String)`而不是这个方法。
+>    **除非被重写，这个方法默认在整个装载过程中都是同步的（线程安全的）。**
+
+JVM类采用的是双亲委托类加载机制，目前内置的类加载器
+
+- Bootstrap ClassLoader
+- ExtClassLoader
+- AppClassLoader
+- 自定义ClassLoader， 一般继承URLClassLoader
+
+JDK9以后的Classloader
+
+- BootClassLoader
+- Platform Class Loade
+- AppClassLoader
+- BuiltinClassloader替代URLClassLoader
+
+springboot的类加载过程应该是AppClassLoader加载org目录下的所有类文件，再由JarLauncher创建LaunchedClassLoader（父类加载器是AppClassLoader）作为默认的类加载器去加载BOOT-INF/classes/和BOOT-INF/lib/中的类和第三方库，并运行start-class中的main方法启动spring boot应用。
+
+对于任意一个类，都必须由加载它的**类加载器**和这个**类**本身一起共同确立其在Java虚拟机中的**唯一性**。
+
+ContextClassloader
+
+- 线程上下文加载器是为了解决父加载器，想要使用子加载器的场景，因为要获取子加载器对应classpath下的文件时，只有获取到子加载器。
+- 通过java.lang.Thread类的setContextClassLoader()方法进行设置
+
+插件式Classloader实现
+
+http://xxgblog.com/2013/07/04/java-urlclassloader-plugin/
+
 ## 异常
 
 异常类型
