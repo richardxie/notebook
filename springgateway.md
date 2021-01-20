@@ -404,6 +404,10 @@ routeBuilder.routes()
 
 
 
+## 限流
+
+Sentinel限流
+
 ## 网关设计
 
 ### 目的
