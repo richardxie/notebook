@@ -22,11 +22,25 @@ remote-repository --> |git push|remote-replica
 remote-replica -->|git push|local-repository
 ```
 ### .git的目录结构
-* HEAD 当前所在版本库位置
+* HEAD 该文件表示当前本地签出的分支，例如存储的值：ref: refs/heads/master;
+
 * branchs 分支
+
 * index 存放暂存区（stage area）的相关信息
-* object
+
+* objects
+
+  存储对象的目录,本地仓库，git中对象分为三种：commit对象，tree对象(多叉树)，blob对象；
+
+  查看对象：
+
+  git  cat-file -p 40位hash （前两位作为目录，后38位文件名）
+
 * refs
+
+  - heads 里面包含所有的本地分支，每个分支都是文件,文件中存储了分支当前指向的commit
+  - remotes 远程仓库信息，refs\remotes\origin\HEAD:指向远程仓库当前分支。
+  - tags 里程碑信息
 
 ```mermaid
 graph LR
