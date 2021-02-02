@@ -408,6 +408,89 @@ routeBuilder.routes()
 
 Sentinel限流
 
+限流资源 @sentinelResource
+
+### 融断
+
+#### 限流熔断
+
+- 指定blockhandler
+
+#### 异常熔断
+
+- 指定fallback
+
+```java
+  @GetMapping("/testA")
+  @SentinelResource(value = "testA", 
+                    blockHandlerClass = CustomerCircuitBreaker.class, blockHandler = "blocHandler", 
+                    fallbackClass = {CustomerCircuitBreaker.class}, fallback = "resultException")
+  public CommonResult testA() {
+        int a = 1 / 0;
+        return new CommonResult(200, "testA");
+ }
+
+@Slf4j
+public class CustomerCircuitBreaker {
+    public static CommonResult resultException(Throwable throwable) {
+        return new CommonResult(500,"运行异常回调处理");
+    }
+
+     public static CommonResult<String> blocHandler(BlockException blockException) {
+        return new CommonResult(500,"自定义block1");
+    }
+
+}
+```
+
+### 规则持久化
+
+- 引入sentinel-datasource-nacos
+- 配置数据源
+
+```yml
+sentinel:
+      transport:
+        dashboard: 127.0.0.1:8080
+        port: 8719 #默认就是8719 如果被占用默认+1
+      datasource:
+        ds1:
+          nacos:
+            server-addr: 192.168.10.37:18848
+            dataId: ${spring.application.name}
+            groupId: DEV
+            namespace: 8622d428-0496-4a09-b178-da3cfc736055
+            data-type: json
+            rule-type: flow
+```
+
+- nacos配置
+
+  ```json
+  [
+      {
+          "resource":"testB",  // 资源名称
+          "limitAPP":"default", //来源应用
+          "grade":1, // 阈值类型, 0表示线程数,1表示QPS
+          "count":1, //单机阈值
+          "strategy":0, //流控模式,0表示直接,1表示关联,2表示链路
+          "controlBehavior":0, // 流控效果,0表示快速失败,1表示WarmUp,2表示排队等待
+          "clusterMode":false //是否集群
+      }
+  
+  ]
+  ```
+
+  
+
+## 问题解答
+
+- DataBufferLimitException: Exceeded limit on max bytes to buffer
+
+  https://github.com/spring-cloud/spring-cloud-gateway/issues/1658
+
+- 
+
 ## 网关设计
 
 ### 目的
