@@ -489,7 +489,23 @@ sentinel:
 
   https://github.com/spring-cloud/spring-cloud-gateway/issues/1658
 
-- 
+- Connect reset by peer 和 Connection prematurely closed BEFORE response
+
+  SCG使用了已断开的连接， SCG的连接超时与后端服务的连接超时不匹配。
+
+  SCG全局的TCP连接超时时间默认时间是45秒
+
+  Tomcat的默认connectionTimeout是20秒，keepAliveTimeout也是20秒
+
+  ```yml
+  System.setProperty("reactor.netty.pool.leasingStrategy", "lifo");
+  spring.cloud.gateway.httpclient.pool.max-idle-time=PT1S
+  
+  spring.cloud.gateway.httpclient.connect-timeout=2000
+  spring.cloud.gateway.httpclient.response-timeout=PT30S
+  ```
+
+  https://blog.csdn.net/rickiyeat/article/details/107900585
 
 ## 网关设计
 

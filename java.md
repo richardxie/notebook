@@ -268,7 +268,7 @@ public void testGenericType() throws NoSuchFieldException, SecurityException {
 
 ##  Lamda
 
-### 函数式编程
+## 函数式编程
 
 函数称为第一类的类型， 可以作为函数的参数，赋值给变量及返回值。
 
@@ -301,3 +301,75 @@ public void testLamda() {
 	}
 ```
 
+### Stream
+
+> Java 8 的 Stream 主要关注在流的过滤，映射，合并，而 Reactive Stream 更进一层，侧重的是流的产生与消费，即流在生产与消费者之间的协调
+
+### Reactive Stream
+
+```java
+// 发布者(生产者)
+public interface Publisher<T> {
+    public void subscribe(Subscriber<? super T> s);
+}
+// 订阅者(消费者)
+public interface Subscriber<T> {
+    public void onSubscribe(Subscription s);
+    public void onNext(T t);
+    public void onError(Throwable t);
+    public void onComplete();
+}
+// 用于发布者与订阅者之间的通信(实现背压：订阅者能够告诉生产者需要多少数据)
+public interface Subscription {
+    public void request(long n);
+    public void cancel();
+}
+// 用于处理发布者 发布消息后，对消息进行处理，再交由消费者消费
+public interface Processor<T,R> extends Subscriber<T>, Publisher<R> {
+}
+```
+
+### Reactor
+
+- Mono
+
+  Mono<T>是一种专门的发布器（Publisher<T>），它通过onNext信号最多发出一个项目，然后以onComplete信号终止（成功的Mono，有值或无值），或者只发出一个onError信号（失败的Mono）
+
+- Flux
+
+  Flux<T>是一个标准发布器(Publisher<T>)，它表示由0到N个发出的项组成的异步序列，可以选择由完成信号或错误终止。在reactivestreams规范中，这三种类型的信号转换为对下游用户的onNext、onComplete和onError方法的调用。
+
+- publishOn
+
+  它接收来自上游的信号，并在下游重放这些信号，同时对来自关联调度器的worker执行回调。因此，它会影响后续操作符的执行（直到另一个publishOn链接进来）
+
+  ```java
+  Scheduler s = Schedulers.newParallel("parallel-scheduler", 4); 
+  final Flux<String> flux = Flux    
+  	.range(1, 2)    
+      .map(i -> 10 + i)  // thread1 执行
+      .publishOn(s) // threadx in scheduler
+      .map(i -> "value " + i);   // threadx 执行
+  
+  new Thread(() -> flux.subscribe(System.out::println));  // subscription 发生在 thread1, print在threadx中执行
+  ```
+
+  
+
+- subscribeOn
+
+  它应用于subscription处理时（反向链被构造）。因此，无论您将subscribeOn放置在链中的何处，它都会影响源发射的上下文。但是，这并不影响对publishOn -的后续调用的行为；它们仍然会切换后面部分链的执行上下文。
+
+  > 订阅链中有多个subscribeOn，只有最开始的subscribeOn起作用。
+
+  ```java
+  Scheduler s = Schedulers.newParallel("parallel-scheduler", 4);  
+  final Flux<String> flux = Flux    
+  	.range(1, 2)    
+      .map(i -> 10 + i)  //threadx 执行  
+      .subscribeOn(s)   //从订阅时间开始切换整个序列 , threadx 
+      .map(i -> "value " + i);   //threadx执行
+  new Thread(() -> flux.subscribe(System.out::println)); //Thread中订阅，但subscribeOn切换到调度线程 threadx， print在threadx执行
+  ```
+
+   
