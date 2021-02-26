@@ -93,11 +93,43 @@ public Object getBean(String name) throws BeansException {
 
    别名转换， FactoryBean
 
+   ```java
+   final String beanName = transformedBeanName(name);
+   ```
+
 2. 尝试从缓存中加载单例
 
    检查缓存中或者实例工厂中是否有对应的实例。Spring创建bean的原则是不等bean创建完成就会见创建bean的ObjectFactory提早加入缓存。这样避免循环依赖。
 
    Object sharedInstance = getSingletom(beanName);
+
+   ```java
+   protected Object getSingleton(String beanName, boolean allowEarlyReference) {
+       Object singletonObject = this.singletonObjects.get(beanName);
+       if (singletonObject == null && isSingletonCurrentlyInCreation(beanName)) {
+           synchronized (this.singletonObjects) {
+               singletonObject = this.earlySingletonObjects.get(beanName);
+               if (singletonObject == null && allowEarlyReference) {
+                   ObjectFactory<?> singletonFactory = this.singletonFactories.get(beanName);
+                   if (singletonFactory != null) {
+                       singletonObject = singletonFactory.getObject();
+                       this.earlySingletonObjects.put(beanName, singletonObject);
+                       this.singletonFactories.remove(beanName);
+                   }
+               }
+           }
+       }
+       return (singletonObject != NULL_OBJECT ? singletonObject : null);
+   }
+   ```
+
+   三级缓存:
+
+   - **singletonObjects**，单例缓存，存储已经实例化完成的单例。bean name --> bean instance
+
+   - **singletonFactories**，生产单例的工厂的缓存，存储工厂。bean name --> ObjectFactory 
+
+   - **earlySingletonObjects**，提前暴露的单例缓存，这时候的单例刚刚创建完，但还会注入依赖。bean name --> bean instance
 
 3. bean实例化（缓存中）
 
@@ -117,7 +149,7 @@ public Object getBean(String name) throws BeansException {
 
 6. 将存储XML配置文件的GernericBeanDefinition转换为RootBeanDefinition
 
-   RootBeanDefiniton
+   **GenericBeanDefinition**记录了一些当前类声明的属性或构造参数，但是对于父类只用了一个 `parentName` 来记录, 需要完整的类信息（**RootBeanDefiniton**)
 
 7. 寻找依赖
 
@@ -127,9 +159,61 @@ public Object getBean(String name) throws BeansException {
 
    singleton, prototype, request等不同的scope，进行Bean初始换
 
+   - **使用工厂方法创建**，`instantiateUsingFactoryMethod` 。
+   - **使用有参构造函数创建**，`autowireConstructor`。
+   - **使用无参构造函数创建**，`instantiateBean`
+
 9. 类型转换
 
    根据接口的requiredType进行类型转换
+   
+10. 注入属性
+
+    ```java
+    protected void populateBean ... {
+        PropertyValues pvs = mbd.getPropertyValues();
+        
+        ...
+        // InstantiationAwareBeanPostProcessor 前处理
+        for (BeanPostProcessor bp : getBeanPostProcessors()) {
+            if (bp instanceof InstantiationAwareBeanPostProcessor) {
+                InstantiationAwareBeanPostProcessor ibp = (InstantiationAwareBeanPostProcessor) bp;
+                if (!ibp.postProcessAfterInstantiation(bw.getWrappedInstance(), beanName)) {
+                    continueWithPropertyPopulation = false;
+                    break;
+                }
+            }
+        }
+        ...
+        
+        // 根据名称注入
+        if (mbd.getResolvedAutowireMode() == RootBeanDefinition.AUTOWIRE_BY_NAME) {
+            autowireByName(beanName, mbd, bw, newPvs);
+        }
+    
+        // 根据类型注入
+        if (mbd.getResolvedAutowireMode() == RootBeanDefinition.AUTOWIRE_BY_TYPE) {
+            autowireByType(beanName, mbd, bw, newPvs);
+        }
+    
+        ... 
+        // InstantiationAwareBeanPostProcessor 后处理
+        for (BeanPostProcessor bp : getBeanPostProcessors()) {
+            if (bp instanceof InstantiationAwareBeanPostProcessor) {
+                InstantiationAwareBeanPostProcessor ibp = (InstantiationAwareBeanPostProcessor) bp;
+                pvs = ibp.postProcessPropertyValues(pvs, filteredPds, bw.getWrappedInstance(), beanName);
+                if (pvs == null) {
+                    return;
+                }
+            }
+        }
+        
+        ...
+        
+        // 应用属性值
+        applyPropertyValues(beanName, mbd, bw, pvs);
+    }
+    ```
 
 
 
@@ -158,3 +242,6 @@ management:
 k8s
 
 https://help.aliyun.com/document_detail/132165.html
+
+https://www.jianshu.com/p/9ea61d204559
+
