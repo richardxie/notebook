@@ -506,6 +506,43 @@ sentinel:
   ```
 
   https://blog.csdn.net/rickiyeat/article/details/107900585
+  
+- OutOfDirectMemoryError: failed to allocate xxx  byte(s) of direct memory
+
+  合理使用DataBuffer，使用数据缓冲区时，必须特别小心以确保释放缓冲区，因为它们可能会被合并。
+
+  引用计数的缺点是容易引起内存泄漏。因为JVM不知道Netty的引用计数的实现,它会自动垃圾收集不可达对象,即使他们的引用计数并不是零。对象一旦被垃圾收集就不能被复活,因此不能返回对象池,从而会产生内存泄漏。
+  
+  
+
+  - 如果解码器只是读取每个输入缓冲区并准备立即释放它，则可以通过DataBufferUtils.release（dataBuffer）这样做。
+  - 如果Decoder使用的是Flux或Mono运算符（例如flatMap，reduce和其他在内部预取和缓存数据项的运算符），或者使用的运算符（例如filter，skip和其他省略项的运算符），则doOnDiscard（PooledDataBuffer.class，DataBufferUtils必须将::: release）添加到组合链中，以确保在丢弃此类缓冲区之前将其释放，这也可能是错误或取消信号的结果。
+  - 如果解码器以任何其他方式保留一个或多个数据缓冲区，则它必须确保在完全读取时释放它们，或者在读取和释放缓存的数据缓冲区之前发生错误或取消信号的情况下。
+  
+  ```java
+  Mono<Map<String,Part>> muMap = DataBufferUtils.join(exchange.getRequest().getBody()).flatMap(dataBuffer -> {
+      try {
+              DataBufferUtils.retain(dataBuffer); //???引用计数加一
+              final ResolvableType resolvableType = ResolvableType.forClassWithGenerics(MultiValueMap.class, String.class, Part.class);
+  
+              return httpMessageReaders.stream()
+                      .filter(reader -> reader.canRead(resolvableType, exchange.getRequest().getHeaders().getContentType())).findFirst()
+                      .orElseThrow(() -> new IllegalStateException("no suitable HttpMessageReader."))
+                      .readMono(resolvableType, exchange.getRequest(), Collections.emptyMap())
+                      .flatMap(resolvedBody -> {
+                          Map<String,Part> map = ((MultiValueMap<String,Part>) resolvedBody).toSingleValueMap();
+                          return Mono.just(map);
+                      });
+          }finally {
+           	DataBufferUtils.release(buffer); //引用计数减一
+      	}
+          });
+    
+                                                                                               
+                                                                                               
+  ```
+  
+  
 
 ## 网关设计
 
@@ -552,3 +589,6 @@ Post请求验签
 https://www.it610.com/article/1282318695766441984.htm
 
 https://gitee.com/zlt2000/microservices-platform/tree/master/zlt-gateway
+
+https://blog.csdn.net/mrqiang9001/article/details/86241836
+
