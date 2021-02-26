@@ -124,9 +124,27 @@ git push origin HEAD --force
 ```
 * 
 ### 分支管理
+* 创建本地分支并推送服务器
+    
+    git branch  2.1 #从当前分支创建2.1本地分支
+    
+    git checkout 2.1 #切换到2.1本地分支
+    
+    git push origin 2.1 #推送
+    
+    git push --set-upstream origin 2.1  #当前分支与远程2.1分支关联
+    
+* 删除分支
+
+    git branch -d bugfix # 删除本地分支
+
+    git push origin –delete bugfix # 删除远程分支
+
 * 显示远程分支信息 git ls-remote 
+    
     * git remote -v
     * git remote show origin
+    
 * 下载远程分支 git checkout -b 2.0 origin/2.0
 
 * 合并分支
