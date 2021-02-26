@@ -5,23 +5,76 @@
 - 常见标签
     - id
         id标签是bean的唯一标识，IoC容器中bean的id标签不能重复，否则报错
+        
     - name
       name标签，可以是分隔符分割的字符串，作为bean的别名列表，当ID不指定是，第一个name作为Bean的注册的ID（beanName）
+      
     - class
-    class属性是bean常用属性，为bean的全限定类名
+      class属性是bean常用属性，为bean的全限定类名
+
     - factory-method
+
     - factory-bean
+
     - init-method
+
     - destory-method
+
     - scope
+
+        
+
     - autowire
-    
+
     ``` xml
     <bean id="user" class="com.demo.User" />
     ```
-    
+
     - 其他
     - 
+
+### 循环依赖
+
+两个或多个Bean相互之间持有对方，包括构造器循环依赖和setter循环依赖。
+
+- 构造器循环依赖
+
+  通过构造器注入构成的循环依赖，此依赖无法解决，只能抛出BeanCurrentlyInCreationException异常。
+
+  ```java
+  @Component
+  public class BeanA {
+  	private final BeanB beanB;
+  	public BeanA(BeanB b) {
+  		this.beanB = b;
+  	}
+  	
+  	public void a() {
+  		System.out.println("BeanA")
+  	}
+  }
+  
+  @Component
+  public class BeanB {
+  	private final BeanB beanC;
+  	public BeanB(BeanC c) {
+  		this.beanC = c;
+  	}
+  	
+  	public void b() {
+  		System.out.println("BeanB")
+  	}
+  }
+  @Component
+  public class BeanC{
+      private final BeanA beanA;
+  	public BeanC(BeanA a) {
+  		this.beanA = a;
+  	}
+  }
+  ```
+
+  
 
 
 
