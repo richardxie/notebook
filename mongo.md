@@ -187,9 +187,7 @@ B数
 
   - 查看状态
 
-    rs.status()
-
-    
+    rs.status(
 
 
 
@@ -207,7 +205,4 @@ B数
   - 非单调变化
 - 配置
 
-## Spring mogodb
-
-
-
+## Spring mongo
