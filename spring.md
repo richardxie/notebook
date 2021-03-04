@@ -410,3 +410,26 @@ https://help.aliyun.com/document_detail/132165.html
 
 https://www.jianshu.com/p/9ea61d204559
 
+## 遇到问题
+
+### 动态代理的异常处理问题
+
+**现象**：自定义动态代理，代理处理器调用实现类方法抛出了一个自定义异常，但外面捕获不到自定义的异常而是**java.lang.reflect.UndeclaredThrowableException**这个异常
+
+**原因**: 具体方法实现中抛出自定义Exception被包装成InvocationTargetException，这是个受检异常，而代理类在处理异常时发现该异常在接口中没有声明，所以包装为UndeclaredThrowableException。
+
+**解决方案**: 在实现InvocationHandler的invoke方法体中，对method.invoke(target, args);调用进行try catch，重新 throw InvocationTargetException的cause
+
+```java
+@Override
+public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+	try {
+      	return method.invoke(target, args);
+ 	} catch(InvocationTargetException e){
+		throw e.getCause();
+	}
+}
+```
+
+
+
