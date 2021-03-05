@@ -146,8 +146,7 @@ Defin
 				if (dependsOn != null) {
 					for (String dep : dependsOn) {
 						if (isDependent(beanName, dep)) {
-							throw new BeanCreationException(mbd.getResourceDescription(), beanName,
-									"Circular depends-on relationship between '" + beanName + "' and '" + dep + "'");
+							throw new BeanCreationException.(..);
 						}
 						registerDependentBean(dep, beanName);
 						try {
@@ -331,6 +330,118 @@ Defin
    根据接口的requiredType进行类型转换
 
 ### 创建Bean
+
+```java
+// Instantiate the bean.
+BeanWrapper instanceWrapper = null;
+// STEP1： 清除缓存
+if (mbd.isSingleton()) {
+   instanceWrapper = this.factoryBeanInstanceCache.remove(beanName);
+}
+//STEP 2：实例BeanWrapper
+if (instanceWrapper == null) {
+   instanceWrapper = createBeanInstance(beanName, mbd, args);
+}
+Object bean = instanceWrapper.getWrappedInstance();
+Class<?> beanType = instanceWrapper.getWrappedClass();
+if (beanType != NullBean.class) {
+   mbd.resolvedTargetType = beanType;
+}
+
+// Allow post-processors to modify the merged bean definition.
+//STEP3: 后处理预解析autowired
+synchronized (mbd.postProcessingLock) {
+   if (!mbd.postProcessed) {
+      try {
+         applyMergedBeanDefinitionPostProcessors(mbd, beanType, beanName);
+      }
+      catch (Throwable ex) {
+         throw new BeanCreationException(mbd.getResourceDescription(), beanName,
+               "Post-processing of merged bean definition failed", ex);
+      }
+      mbd.postProcessed = true;
+   }
+}
+
+// Eagerly cache singletons to be able to resolve circular references
+// even when triggered by lifecycle interfaces like BeanFactoryAware.
+//STEP4: 单例提前曝光
+boolean earlySingletonExposure = (mbd.isSingleton() && this.allowCircularReferences &&
+      isSingletonCurrentlyInCreation(beanName));
+if (earlySingletonExposure) {
+   //为避免后期循环依赖，可以在Bean初始化完成前将创建实例的ObjectFactory加入工厂
+   addSingletonFactory(beanName, () -> getEarlyBeanReference(beanName, mbd, bean));
+}
+
+// Initialize the bean instance.
+Object exposedObject = bean;
+try {
+    //STEP5: 填充，将各个属性值注入，递归初始依赖的Bean
+   populateBean(beanName, mbd, instanceWrapper);
+   exposedObject = initializeBean(beanName, exposedObject, mbd);
+}
+catch (Throwable ex) {
+   throw ...
+}
+
+
+//STEP6: 循环依赖检查
+if (earlySingletonExposure) {
+   Object earlySingletonReference = getSingleton(beanName, false);
+   if (earlySingletonReference != null) {
+      if (exposedObject == bean) {
+         exposedObject = earlySingletonReference;
+      }
+      else if (!this.allowRawInjectionDespiteWrapping && hasDependentBean(beanName)) {
+         String[] dependentBeans = getDependentBeans(beanName);
+         Set<String> actualDependentBeans = new LinkedHashSet<>(dependentBeans.length);
+         for (String dependentBean : dependentBeans) {
+            if (!removeSingletonIfCreatedForTypeCheckOnly(dependentBean)) {
+               actualDependentBeans.add(dependentBean);
+            }
+         }
+         if (!actualDependentBeans.isEmpty()) {
+            throw new BeanCurrentlyInCreationException(...);
+         }
+      }
+   }
+}
+
+// Register bean as disposable.
+try {
+   registerDisposableBeanIfNecessary(beanName, bean, mbd);
+}
+catch (BeanDefinitionValidationException ex) {
+   throw new BeanCreationException(
+         mbd.getResourceDescription(), beanName, "Invalid destruction signature", ex);
+}
+
+return exposedObject;
+```
+
+1. 如果是单例则需要先清除缓存
+
+2. 实例化Bean， BeanDefinitin -> BeanWrapper
+
+   如何存在工厂方法使用工厂方法进行初始化
+
+   根据参数调用相应的构造函数进行初始化
+
+   使用默认构造函数进行初始化
+
+3. Bean合并处理  
+
+   Autowired注解预解析
+
+4. 依赖处理
+
+5. 属性填充
+
+6. 循环依赖检查
+
+7. 注册DisposableBean
+
+8. 完成创建返回
 
 1. 注入属性
 
