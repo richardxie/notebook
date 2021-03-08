@@ -307,6 +307,14 @@ public void testLamda() {
 
 ### Reactive Stream
 
+> - 可组合性和可读性
+> - 数据流， 丰富的操作符
+> - 只要不订阅，就什么都不发生
+> - 背压
+> - 高级抽象，与并发无关
+
+通过来自于订阅者的request信号往上游传播，一路逆流而上直到最开始的发布者那里。
+
 ```java
 // 发布者(生产者)
 public interface Publisher<T> {
@@ -410,4 +418,6 @@ https://github.com/reactive-streams/reactive-streams-jvm/blob/v1.0.3/README.md
   new Thread(() -> flux.subscribe(System.out::println)); //Thread中订阅，但subscribeOn切换到调度线程 threadx， print在threadx执行
   ```
 
-   
+- error handle
+
+  

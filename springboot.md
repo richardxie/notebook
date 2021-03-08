@@ -110,6 +110,20 @@ spring boot提供了开箱即用的快速开发的能力。
 
 - https://www.cnblogs.com/dyzcs/p/13780668.html
 
+## 脱敏与加密
+
+- 脱敏 - 请求响应对象，敏感数据脱敏
+
+  定制ResponseBodyAdviser
+
+- 加密 - 数字加密存储
+
+  定制AttributeConverter
+  
+  https://www.javacodegeeks.com/2014/06/how-to-use-a-jpa-type-converter-to-encrypt-your-data.html
+  
+  
+
 ## Spring Boot Docker
 
 - dockerfile
