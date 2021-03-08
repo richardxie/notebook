@@ -329,11 +329,49 @@ public interface Processor<T,R> extends Subscriber<T>, Publisher<R> {
 }
 ```
 
-### Reactor
+https://github.com/reactive-streams/reactive-streams-jvm/blob/v1.0.3/README.md
+
+- Publisher的规则
+  - *‎发布者发布的onNext信号总数必须小于（onComplete、OnError调用情况下）或等于订阅服务器请求的元素总数* 
+  - 订阅者接收型号的顺序必须是： onSubscribe->onNext->onError->onComplete
+- Subscriber规则
+  - 订阅者必须通过调用request(long n)请求来接收onNext信号， request(1) = "stop-and-wait" 
+  - 订阅者的信号处理推荐使用异步方式，onComplete、onError不能调用Subscription或Publisher的方法
+  - 订阅者存在Subscribtion或其不再需要时必须调用cancel
+- Subscription规则
+  - request、canel方法必须在订阅者上下文中调用
+  - request注意在`Publisher` 和 `Subscriber`之间的递归避免栈溢出（*Subscriber.onNext -> Subscription.request -> Subscriber.onNext -> …,* ）
+- Processor规则
+
+> A `Subscription` is shared by exactly one `Publisher` and one `Subscriber` for the purpose of mediating the data exchange between this pair. This is the reason why the `subscribe()` method does not return the created `Subscription`, but instead returns `void`; the `Subscription` is only passed to the `Subscriber` via the `onSubscribe` callback.
+
+> The Reactive Streams contract allows implementations the flexibility to manage resources and scheduling and mix asynchronous and synchronous processing within the bounds of a non-blocking, asynchronous, dynamic push-pull stream.
+>
+> In order to allow fully asynchronous implementations of all participating API elements—`Publisher`/`Subscription`/`Subscriber`/`Processor`—all methods defined by these interfaces return `void`.
+>
+> ### Reactor
 
 - Mono
 
   Mono<T>是一种专门的发布器（Publisher<T>），它通过onNext信号最多发出一个项目，然后以onComplete信号终止（成功的Mono，有值或无值），或者只发出一个onError信号（失败的Mono）
+
+  ```java
+  public abstract class Mono<T> implements CorePublisher<T>{
+  	public static <T> Mono<T> just(T data) {
+  		return onAssembly(new MonoJust<>(data));
+  	}
+      public final <R> Mono<R> map(Function<? super T, ? extends R> mapper) {
+  		if (this instanceof Fuseable) {
+  			return onAssembly(new MonoMapFuseable<>(this, mapper));
+  		}
+  		return onAssembly(new MonoMap<>(this, mapper));
+  	}
+  }
+  
+  
+  ```
+
+  
 
 - Flux
 

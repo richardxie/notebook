@@ -187,7 +187,7 @@ B数
 
   - 查看状态
 
-    rs.status(
+    rs.status(）
 
 
 
