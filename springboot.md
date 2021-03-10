@@ -118,7 +118,36 @@ spring boot提供了开箱即用的快速开发的能力。
 
 - 加密 - 数字加密存储
 
-  定制AttributeConverter
+  - 定制AttributeConverter
+  
+    ```java
+    @Converter
+    @Slf4j
+    public class CryptoConverter implements AttributeConverter<String, String> {
+        @Override
+        public String convertToDatabaseColumn(String attribute) {
+             Key key = new SecretKeySpec(KEY, "AES");
+            try {
+                Cipher c = Cipher.getInstance(ALGORITHM);
+                c.init(Cipher.ENCRYPT_MODE, key);
+                return Base64.encodeBytes(c.doFinal(attribute.getBytes()));
+            }
+        }
+    }
+    ```
+  
+  
+  
+  - 数据实体指定字段的转换器
+  
+  ```java
+   @Entity
+   @Converts({
+  	@Convert(attributeName="startDate", 
+              converter=DateConverter.class),
+    	@Convert(attributeName="endDate", 
+              converter=DateConverter.class)})
+  ```
   
   https://www.javacodegeeks.com/2014/06/how-to-use-a-jpa-type-converter-to-encrypt-your-data.html
   
